@@ -2,6 +2,10 @@
 
 static uint64_t _analloc_log_page(analloc_t alloc, uint64_t size);
 static uint8_t _analloc_grab_first(analloc_t alloc, uint64_t size);
+static anbtree_path _analloc_ptr_path(analloc_t alloc,
+                                      void * buffer,
+                                      uint64_t size);
+static void _analloc_memcpy(uint8_t * dest, uint8_t * source, uint64_t size);
 
 uint8_t analloc_with_chunk(analloc_t alloc,
                            void * ptr,
@@ -65,10 +69,14 @@ void * analloc_alloc(analloc_t alloc, uint64_t * sizeInOut, uint8_t high) {
   
   // allocate the base node and set it as a data node.
   anbtree_alloc_node(alloc->tree, path);
+  
+  // the node should by DEFAULT be a child node based on the data.
+  /*
   if (depth < alloc->depth) {
     anbtree_free_node(alloc->tree, anbtree_path_left(path));
     anbtree_free_node(alloc->tree, anbtree_path_right(path));
   }
+  */
   
   uint64_t index = anbtree_path_local_index(path);
   uint64_t finalSize = alloc->page << twoPower;
@@ -77,13 +85,7 @@ void * analloc_alloc(analloc_t alloc, uint64_t * sizeInOut, uint8_t high) {
 }
 
 void analloc_free(analloc_t alloc, void * buffer, uint64_t length) {
-  uint64_t twoPower = _analloc_log_page(alloc, length);
-  uint64_t depth = alloc->depth - twoPower;
-  
-  uint64_t index = (uint64_t)buffer - (uint64_t)alloc->mem;
-  index /= alloc->page << twoPower;
-  
-  anbtree_path path = anbtree_path_from_info(depth, index);
+  anbtree_path path = _analloc_ptr_path(alloc, buffer, length);
   
   // keep freeing paths until we can return
   while (path != anbtree_path_none) {
@@ -105,17 +107,47 @@ void analloc_free(analloc_t alloc, void * buffer, uint64_t length) {
 void * analloc_realloc(analloc_t alloc,
                        void * buffer,
                        uint64_t length,
-                       uint64_t * newLen) {
-  (*newLen) = 0;
-  return (void *)0;
-}
-
-uint8_t analloc_realloc_local(analloc_t alloc,
-                              void * buffer,
-                              uint64_t length,
-                              uint64_t * newLen) {
-  (*newLen) = 0;
-  return 0;
+                       uint64_t * newLen,
+                       uint8_t high) {
+  uint64_t oldPower = _analloc_log_page(alloc, length);
+  uint64_t newPower = _analloc_log_page(alloc, *newLen);
+  if (oldPower == newPower) {
+    *newLen = alloc->page << oldPower;
+    return buffer;
+  }
+  
+  // freeing the buffer does not change its contents or corrupt it,
+  // it just marks it off in the tree.
+  analloc_free(alloc, buffer, length);
+  
+  // likewise, allocation does not actually modify the contents of
+  // the buffer, making it super easy to reallocate memory.
+  void * newBuff = analloc_alloc(alloc, newLen, high);
+  
+  // of course, the re-allocation may have failed, in which case we
+  // should undo our initial analloc_free().
+  if (!(*newLen)) {
+    // re-reserve our old buffer and reverse the effects of
+    // analloc_free().
+    (*newLen) = 0;
+    anbtree_path path = _analloc_ptr_path(alloc, buffer, length);
+    while (path != anbtree_path_none) {
+      if (anbtree_is_allocated(alloc->tree, path)) break;
+      anbtree_alloc_node(alloc->tree, path);
+      path = anbtree_path_parent(path);
+    }
+    return (void *)0;
+  }
+  
+  // copy contents of our old buffer to our new buffer for safe keeping!
+  if (oldPower > newPower) {
+    _analloc_memcpy(newBuff, buffer, alloc->page << newPower);
+  } else {
+    _analloc_memcpy(newBuff, buffer, alloc->page << oldPower);
+  }
+  
+  (*newLen) = alloc->page << newPower;
+  return newBuff;
 }
 
 /***********
@@ -149,5 +181,30 @@ static uint8_t _analloc_grab_first(analloc_t alloc, uint64_t size) {
     
     if (sizeOut != newSize) return 0;
     return _analloc_grab_first(alloc, size - newSize);
+  }
+}
+
+static anbtree_path _analloc_ptr_path(analloc_t alloc,
+                                      void * buffer,
+                                      uint64_t length) {
+  uint64_t twoPower = _analloc_log_page(alloc, length);
+  uint64_t depth = alloc->depth - twoPower;
+  
+  uint64_t index = (uint64_t)buffer - (uint64_t)alloc->mem;
+  index /= alloc->page << twoPower;
+  
+  return anbtree_path_from_info(depth, index);
+}
+
+static void _analloc_memcpy(uint8_t * dest, uint8_t * source, uint64_t size) {
+  uint64_t i;
+  if (dest < source) {
+    for (i = 0; i < size; i++) {
+      dest[i] = source[i];
+    }
+  } else {
+    for (i = 0; i < size; i++) {
+      dest[size - i - 1] = source[size - i - 1];
+    }
   }
 }

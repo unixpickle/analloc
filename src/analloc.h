@@ -56,6 +56,7 @@ void analloc_free(analloc_t alloc, void * buffer, uint64_t length);
  * @param length - The current length of the buffer.
  * @param newLen - The requested new length of the buffer.  On return, this
  *                 will be >= the input value, or 0 on reallocation error.
+ * @param high - See `high` on analloc_alloc().
  * @return a pointer to newly sized data, or (void *)0 on error.
  * @discussion If an error occurs, the buffer for which a resize was requested
  * will not be free'd so that future attempts may be made.
@@ -63,21 +64,5 @@ void analloc_free(analloc_t alloc, void * buffer, uint64_t length);
 void * analloc_realloc(analloc_t alloc,
                        void * buffer,
                        uint64_t length,
-                       uint64_t * newLen);
-
-/**
- * Resize a chunk of memory *only* if the new chunk can still exist
- * at the same address.
- * @param alloc - The allocator to use.
- * @param buffer - The buffer to be resized.
- * @param length - The current length of the buffer.
- * @param newLen - The requested new length.  Output is 0 on error as above.
- * @return 1 on success, 0 on failure.
- * @discussion This function works by checking if consecutive memory chunks
- * are available after the specified memory chunk.  If this is being used
- * to shrink data, it should always succeed.
- */
-uint8_t analloc_realloc_local(analloc_t alloc,
-                              void * buffer,
-                              uint64_t length,
-                              uint64_t * newLen);
+                       uint64_t * newLen,
+                       uint8_t high);
