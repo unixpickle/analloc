@@ -34,7 +34,6 @@ int test_initialize() {
                                    infoSize,
                                    8);
   if (!res) return 1;
-  printf("map %d\n", *map);
   if (*map != initialMap) return 2;
   return 0;
 }
