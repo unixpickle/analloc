@@ -150,6 +150,20 @@ void * analloc_realloc(analloc_t alloc,
   return newBuff;
 }
 
+uint64_t analloc_mem_size(analloc_t alloc, void * buffer) {
+  anbtree_path path = _analloc_ptr_path(alloc, buffer, alloc->page);
+  // keep incrementing until it's allocated
+  uint64_t size = alloc->page;
+  while (path != anbtree_path_none) {
+    if (anbtree_is_allocated(alloc->tree, path)) {
+      return size;
+    }
+    size <<= 1;
+    path = anbtree_path_parent(path);
+  }
+  return 0;
+}
+
 /***********
  * Private *
  ***********/

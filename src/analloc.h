@@ -66,3 +66,10 @@ void * analloc_realloc(analloc_t alloc,
                        uint64_t length,
                        uint64_t * newLen,
                        uint8_t high);
+
+/**
+ * Returns the size of an allocated chunk in memory.
+ * @param buffer - The buffer pointing to the beginning of the chunk. If
+                   `buffer` is not allocated, behavior is undefined.
+ */
+uint64_t analloc_mem_size(analloc_t alloc, void * buffer);

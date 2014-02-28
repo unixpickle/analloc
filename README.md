@@ -29,7 +29,7 @@ The `analloc_t` structure is designed for single-threaded access.  If you plan o
 
 ### I don't want to store the damn size
 
-Don't worry, soon enough I will add a helper function, something like `analloc_mem_size`, which takes an allocator and a poitner and returns the size of the pointer as it is currently allocated.
+Call `analloc_mem_size` and pass in a pointer to get its size.  I still encourage keeping track of sizes if you can, since that reduces clock cycles.
 
 # License
 

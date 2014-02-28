@@ -42,32 +42,36 @@ int test_realloc_low() {
   if (!ptr || size != 0x24) return 1;
   if (ptr != buffer + 0x24) return 2;
   if (*map != 0b11000000010001011) return 3;
+  if (analloc_mem_size((analloc_t)buffer, ptr) != size) return 4;
   
   size = 0x48;
   uint8_t * ptr2 = (uint8_t *)analloc_alloc((analloc_t)buffer, &size, 0);
-  if (!ptr2 || size != 0x48) return 4;
-  if (ptr2 != buffer + 0x48) return 5;
-  if (*map != 0b11000000110001011) return 6;
+  if (!ptr2 || size != 0x48) return 5;
+  if (ptr2 != buffer + 0x48) return 6;
+  if (*map != 0b11000000110001011) return 7;
+  if (analloc_mem_size((analloc_t)buffer, ptr2) != size) return 8;
   
   size = 0x90;
   uint8_t * ptr2New = (uint8_t *)analloc_realloc((analloc_t)buffer,
                                                  ptr2, 0x48, &size, 0);
-  if (!ptr2New || size != 0x90) return 7;
-  if (ptr2New != buffer + 0x90) return 8;
-  if (*map != 0b11000000010011011) return 9;
+  if (!ptr2New || size != 0x90) return 9;
+  if (ptr2New != buffer + 0x90) return 10;
+  if (*map != 0b11000000010011011) return 11;
+  if (analloc_mem_size((analloc_t)buffer, ptr2New) != size) return 12;
   
   analloc_free((analloc_t)buffer, ptr2New, 0x90);
-  if (*map != 0b11000000010001011) return 10;
+  if (*map != 0b11000000010001011) return 13;
   
   size = 0x48;
   uint8_t * ptrNew = (uint8_t *)analloc_realloc((analloc_t)buffer,
                                                 ptr, 0x24, &size, 0);
-  if (!ptrNew || size != 0x48) return 11;
-  if (ptrNew != buffer + 0x48) return 12;
-  if (*map != 0b1000000110001011) return 13;
+  if (!ptrNew || size != 0x48) return 14;
+  if (ptrNew != buffer + 0x48) return 15;
+  if (*map != 0b1000000110001011) return 16;
+  if (analloc_mem_size((analloc_t)buffer, ptrNew) != size) return 17;
   
   analloc_free((analloc_t)buffer, ptrNew, 0x48);
-  if (*map != initialMap) return 14;
+  if (*map != initialMap) return 18;
   
   return 0;
 }
