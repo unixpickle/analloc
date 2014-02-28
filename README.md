@@ -8,10 +8,14 @@ Initializing *analloc* is a simple matter. The usage is roughly as follows:
 
  * Reserve a chunk of physical memory for use with *analloc*. This chunk may begin with some pre-allocated memory.
  * Allocate some memory for an `analloc_t` structure. This memory may be part of the pre-allocated memory in the physical memory chunk you plan to use for *analloc*.
- * Call `analloc_with_chunk()`. The first argument is a pointer to the analloc_t structure, the next is a pointer to the absolute beginning of the buffer, the next is the number of bytes *used* by your pre-allocated data at the beginning of the buffer. If you use another location to store the `analloc_t`, this may very well be 0. The next argument is the *page* size. This specifies the minimum amount of bytes the user should be able to allocate.
- * Calculate the number of bytes actually used by *analloc*.  This is equal to `context->page << context->depth` where `context` is an `analloc_t`.
+ * Call `analloc_with_chunk()`. You pass in
+   * a pointer to the `analloc_t` structure
+   * a pointer to the absolute beginning of the buffer
+   * the number of bytes *used* by your pre-allocated data at the beginning of the buffer. If you use another location to store the `analloc_t`, this may very well be 0.
+   * the *page* size. This specifies the minimum amount of bytes the user should be able to allocate. See the note on *Page Size* below for more.
+ * Calculate the number of bytes actually used by *analloc*.  This is equal to `context->page << context->depth` where `context` is your `analloc_t`.
 
-To allocate some data, use `analloc_alloc()`, and to free data use `analloc_free()`. To resize data, the `analloc_realloc()` function will do the job.
+To allocate some data, use `analloc_alloc()`, to free data use `analloc_free()`, and to resize data, use `analloc_realloc()`.
 
 # Things to Note
 
@@ -23,7 +27,7 @@ When you initialize an allocator, you specify a `page` argument.  Whenever a cal
 
 The `analloc_t` structure is designed for single-threaded access.  If you plan on having multiple threads all capable of allocating memory (as I do in my OS), you will need a separate mutex system.
 
-### I don't want to have to store the damn size
+### I don't want to store the damn size
 
 Don't worry, soon enough I will add a helper function, something like `analloc_mem_size`, which takes an allocator and a poitner and returns the size of the pointer as it is currently allocated.
 
