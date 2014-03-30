@@ -5,7 +5,9 @@ typedef struct {
   anbtree_ptr tree;
   uint64_t page;
   uint64_t depth;
-} __attribute__((packed)) * analloc_t;
+} __attribute__((packed)) analloc_struct_t;
+
+typedef analloc_struct_t * analloc_t;
 
 /**
  * Creates a new allocator that encloses a certain buffer of memory.
