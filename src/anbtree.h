@@ -1,3 +1,6 @@
+#ifndef __ANBTREE_H__
+#define __ANBTREE_H__
+
 #include <stdint.h>
 
 /**
@@ -97,3 +100,5 @@ anbtree_path anbtree_path_sibling(anbtree_path path);
  * Gets a path for a local index and depth.
  */
 anbtree_path anbtree_path_from_info(uint64_t depth, uint64_t localIdx);
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef __ANALLOC_H__
+#define __ANALLOC_H__
+
 #include "anbtree.h"
 
 typedef struct {
@@ -75,3 +78,5 @@ void * analloc_realloc(analloc_t alloc,
                    `buffer` is not allocated, behavior is undefined.
  */
 uint64_t analloc_mem_size(analloc_t alloc, void * buffer);
+
+#endif
